@@ -46,7 +46,10 @@ final class Connection
         $statement = $this->pdo()->prepare($sql);
         $statement->execute($params);
 
-        return $statement->fetch() ?: null;
+        /** @var array<string, mixed>|false $row */
+        $row = $statement->fetch();
+
+        return false === $row ? null : $row;
     }
 
     private function pdo(): PDO

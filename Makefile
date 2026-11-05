@@ -56,7 +56,7 @@ test: ## Run the test suite, e.g. make test c="--testsuite=Unit" or c="--filter=
 	$(EXEC) php vendor/bin/pest $(c)
 
 .PHONY: lint
-lint: ## Check the code style with PHP-CS-Fixer, showing what would change (same check as CI)
+lint: ## Check the code style with PHP-CS-Fixer, showing what would change
 	$(EXEC) php vendor/bin/php-cs-fixer check --diff
 
 .PHONY: lint-fix
@@ -68,3 +68,7 @@ lint-config: ## Run the linters: composer.json, YAML config and the service cont
 	$(EXEC) composer validate --strict --no-check-publish
 	$(EXEC) php bin/console lint:yaml config --parse-tags
 	$(EXEC) php bin/console lint:container
+
+.PHONY: stan
+stan: ## Run PHPStan static analysis
+	$(EXEC) php vendor/bin/phpstan analyse --memory-limit=1G

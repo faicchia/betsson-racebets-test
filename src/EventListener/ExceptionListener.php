@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Throwable;
 
@@ -64,28 +63,15 @@ final class ExceptionListener
         $errors = [];
         foreach ($exception->getViolations() as $violation) {
             // Request constraints stop at a field's first failure; keep the first message if one still repeats
-            $errors[$violation->getPropertyPath()] ??= self::message($violation);
+            $errors[$violation->getPropertyPath()] ??= (string) $violation->getMessage();
         }
 
         return $errors;
     }
 
-    private static function message(ConstraintViolationInterface $violation): string
-    {
-        $parameters = $violation->getParameters();
-        if (!isset($parameters['{{ type }}'])) {
-            return (string) $violation->getMessage();
-        }
-
-        // Request fields are nullable only so a missing field fails NotBlank, so "null" is never a type to ask for
-        $parameters['{{ type }}'] = implode('|', array_diff(explode('|', $parameters['{{ type }}']), ['null']));
-
-        return strtr($violation->getMessageTemplate(), $parameters);
-    }
-
     /**
      * @param array<string, string> $errors
-     * @param array<string, string> $headers
+     * @param array<mixed>          $headers
      */
     private static function jsonResponse(
         int $status,

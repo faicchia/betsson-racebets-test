@@ -113,7 +113,7 @@ it('reports only the first failed check of a field', function () {
 });
 
 it('reports every missing field as blank', function () {
-    $body = postCustomer($this->client, ['email' => 'jane.doe@example.com', 'firstName' => null]);
+    $body = postCustomer($this->client, ['email' => 'jane.doe@example.com']);
 
     expect($this->client->getResponse()->getStatusCode())->toBe(422)
         ->and($body['errors'])->toBe([
@@ -122,6 +122,13 @@ it('reports every missing field as blank', function () {
             'gender' => 'This value should not be blank.',
             'country' => 'This value should not be blank.',
         ]);
+});
+
+it('rejects a null field as the wrong type', function () {
+    $body = postCustomer($this->client, validCustomer(['firstName' => null]));
+
+    expect($this->client->getResponse()->getStatusCode())->toBe(422)
+        ->and($body['errors'])->toBe(['firstName' => 'This value should be of type string.']);
 });
 
 it('rejects a field of the wrong type', function () {

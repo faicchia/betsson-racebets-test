@@ -1,0 +1,5 @@
+parameters:
+    level: max
+    paths:
+        - src
+    # Pest tests are closures bound to the test case at runtime ($this, self::), which PHPStan cannot follow.
