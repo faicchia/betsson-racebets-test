@@ -31,6 +31,19 @@ final readonly class Money
         return new self(new Number($amount));
     }
 
+    public function add(self $other): self
+    {
+        return new self($this->amount + $other->amount);
+    }
+
+    /**
+     * @return self the share rounded half-up to the cent, so the stored value is the one shown
+     */
+    public function percent(int $percent): self
+    {
+        return new self(($this->amount * $percent / 100)->round(self::SCALE));
+    }
+
     public function toString(): string
     {
         // round() keeps the original scale, so bcadd() pads the result to exactly two decimals
