@@ -1,0 +1,209 @@
+openapi: 3.1.0
+
+info:
+  title: RaceBets API
+  version: 1.0.0
+  description: |
+    Customers with a real and a bonus balance, deposits, withdrawals and a daily report.
+
+    Requests and responses are JSON. Request bodies must be sent with `Content-Type: application/json`.
+
+    Every error has the same shape: `status`, `message` and `errors`. `errors` maps each invalid field
+    to one message and is an empty object when the error does not belong to a field.
+
+# Relative, so "Try it out" calls the API on the same host that serves these docs.
+servers:
+  - url: /
+
+# The API has no authentication.
+security: []
+
+tags:
+  - name: Customers
+    description: Registration details and balances of customers.
+
+paths:
+  /api/customers:
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Create a customer
+      description: |
+        Registers a customer with zero balances. The bonus percent is assigned at random
+        (a whole number from 5 to 20) and never changes afterwards.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: Customer created.
+          headers:
+            Location:
+              description: URL of the new customer.
+              schema:
+                type: string
+                example: /api/customers/019a5a00-0000-7000-8000-000000000001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/MalformedJson'
+        '409':
+          description: The email is already used by another customer. Emails are compared case-insensitively.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                status: 409
+                message: "The email 'jane.doe@example.com' is already taken."
+                errors:
+                  email: This email is already taken.
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+
+components:
+  schemas:
+    CreateCustomerRequest:
+      type: object
+      required: [email, firstName, lastName, gender, country]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: jane.doe@example.com
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Jane
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Doe
+        gender:
+          $ref: '#/components/schemas/Gender'
+        country:
+          $ref: '#/components/schemas/Country'
+
+    Customer:
+      type: object
+      required:
+        [id, email, firstName, lastName, gender, country, bonusPercent, realBalance, bonusBalance, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID v7.
+          example: 019a5a00-0000-7000-8000-000000000001
+        email:
+          type: string
+          format: email
+          example: jane.doe@example.com
+        firstName:
+          type: string
+          example: Jane
+        lastName:
+          type: string
+          example: Doe
+        gender:
+          $ref: '#/components/schemas/Gender'
+        country:
+          $ref: '#/components/schemas/Country'
+        bonusPercent:
+          type: integer
+          minimum: 5
+          maximum: 20
+          description: Bonus credited on every 3rd deposit, as a percentage of the deposit. Read-only.
+          example: 10
+        realBalance:
+          $ref: '#/components/schemas/Money'
+        bonusBalance:
+          $ref: '#/components/schemas/Money'
+        createdAt:
+          type: string
+          format: date-time
+          description: UTC.
+          example: '2026-11-05T20:23:07.467+00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          description: UTC.
+          example: '2026-11-05T20:23:07.467+00:00'
+
+    Gender:
+      type: string
+      enum: [male, female, other]
+      example: female
+
+    Country:
+      type: string
+      pattern: '^[A-Z]{2}$'
+      description: ISO 3166-1 alpha-2 code, uppercase.
+      example: DE
+
+    Money:
+      type: string
+      pattern: '^\d+\.\d{2}$'
+      description: Decimal amount as a string, always with two decimals.
+      example: '0.00'
+
+    Error:
+      type: object
+      required: [status, message, errors]
+      properties:
+        status:
+          type: integer
+          description: The HTTP status code.
+        message:
+          type: string
+        errors:
+          type: object
+          description: One message per invalid field. Empty when the error does not belong to a field.
+          additionalProperties:
+            type: string
+
+  responses:
+    MalformedJson:
+      description: The body is not valid JSON.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: 400
+            message: Request payload contains invalid "json" data.
+            errors: {}
+
+    UnsupportedMediaType:
+      description: The body is not sent as `application/json`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: 415
+            message: Unsupported format, expects "json", but "form" given.
+            errors: {}
+
+    ValidationFailed:
+      description: |
+        One or more fields are missing or invalid. Each field reports only its first failed check.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: 422
+            message: The request contains invalid fields.
+            errors:
+              email: This value is not a valid email address.
+              country: This value should not be blank.
