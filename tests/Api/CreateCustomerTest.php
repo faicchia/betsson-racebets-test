@@ -145,7 +145,7 @@ it('rejects malformed JSON with 400', function () {
         ->and($this->client->getResponse()->headers->get('Content-Type'))->toBe('application/json')
         ->and($body)->toBe([
             'status' => 400,
-            'message' => 'Request payload contains invalid "json" data.',
+            'message' => "Request payload contains invalid 'json' data.",
             'errors' => [],
         ]);
 });
@@ -157,5 +157,5 @@ it('rejects a body that is not JSON with 415', function () {
 
     expect($this->client->getResponse()->getStatusCode())->toBe(415)
         ->and($this->client->getResponse()->headers->get('Content-Type'))->toBe('application/json')
-        ->and($body['message'])->toBe('Unsupported format, expects "json", but "form" given.');
+        ->and($body['message'])->toBe("Unsupported format, expects 'json', but 'form' given.");
 });

@@ -44,7 +44,8 @@ final class ExceptionListener
             ),
             $exception instanceof HttpExceptionInterface => self::jsonResponse(
                 $exception->getStatusCode(),
-                $exception->getMessage(),
+                // Symfony quotes values with double quotes; single quotes avoid escaping them in the JSON body
+                str_replace('"', "'", $exception->getMessage()),
                 headers: $exception->getHeaders(),
             ),
             // Never expose the message of an unexpected error; Symfony has already logged it

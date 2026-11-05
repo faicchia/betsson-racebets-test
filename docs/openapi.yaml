@@ -180,7 +180,7 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             status: 400
-            message: Request payload contains invalid "json" data.
+            message: Request payload contains invalid 'json' data.
             errors: {}
 
     UnsupportedMediaType:
@@ -191,7 +191,7 @@ components:
             $ref: '#/components/schemas/Error'
           example:
             status: 415
-            message: Unsupported format, expects "json", but "form" given.
+            message: Unsupported format, expects 'json', but 'form' given.
             errors: {}
 
     ValidationFailed:
