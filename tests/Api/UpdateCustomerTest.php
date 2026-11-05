@@ -7,7 +7,7 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 beforeEach(function () {
     $this->client = self::createClient();
     $this->db = self::getContainer()->get(App\Database\Connection::class);
-    $this->db->execute('DELETE FROM customers');
+    resetDatabase($this->db);
     $this->customer = postCustomer($this->client, validCustomer());
 });
 

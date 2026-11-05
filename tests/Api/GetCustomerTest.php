@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 beforeEach(function () {
     $this->client = self::createClient();
-    self::getContainer()->get(App\Database\Connection::class)->execute('DELETE FROM customers');
+    resetDatabase(self::getContainer()->get(App\Database\Connection::class));
     $this->customer = postCustomer($this->client, validCustomer());
 });
 

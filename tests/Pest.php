@@ -11,6 +11,12 @@ pest()->extend(KernelTestCase::class)->in('Integration');
 // boots the kernel and sends HTTP requests through it
 pest()->extend(WebTestCase::class)->in('Api');
 
+function resetDatabase(App\Database\Connection $db): void
+{
+    $db->execute('DELETE FROM transactions');
+    $db->execute('DELETE FROM customers');
+}
+
 function postCustomer(KernelBrowser $client, array|string $payload): array
 {
     $client->request(

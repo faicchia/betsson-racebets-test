@@ -8,7 +8,7 @@ use App\Database\TransactionManager;
 beforeEach(function () {
     $this->db = self::getContainer()->get(Connection::class);
     $this->transactions = self::getContainer()->get(TransactionManager::class);
-    $this->db->execute('DELETE FROM customers');
+    resetDatabase($this->db);
 });
 
 function insertCustomerRow(Connection $db, string $email): void
