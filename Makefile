@@ -1,7 +1,12 @@
 .DEFAULT_GOAL := help
 
 COMPOSE := docker compose
-EXEC := $(COMPOSE) exec app
+
+# Without a terminal on stdin (git hooks, CI, pipes) docker must not allocate a TTY, or it fails with
+# "the input device is not a TTY".
+NO_TTY := $(shell [ -t 0 ] || echo -T)
+
+EXEC := $(COMPOSE) exec $(NO_TTY) app
 
 # Build the image with the host user's ids so files on the bind mount stay editable.
 export UID := $(shell id -u)
