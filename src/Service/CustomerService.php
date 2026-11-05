@@ -20,7 +20,7 @@ final readonly class CustomerService
     public const int MAX_BONUS_PERCENT = 20;
 
     public function __construct(
-        private CustomerRepository $customers
+        private CustomerRepository $customers,
     ) {
     }
 

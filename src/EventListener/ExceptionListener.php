@@ -91,7 +91,7 @@ final class ExceptionListener
         int $status,
         string $message,
         array $errors = [],
-        array $headers = []
+        array $headers = [],
     ): JsonResponse {
         // Ensure an empty errors array encodes as an empty JSON object ({}) instead of an array ([])
         $formattedErrors = empty($errors) ? (object) [] : $errors;

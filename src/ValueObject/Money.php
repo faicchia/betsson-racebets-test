@@ -14,7 +14,7 @@ final readonly class Money
     private const int SCALE = 2;
 
     private function __construct(
-        private Number $amount
+        private Number $amount,
     ) {
     }
 

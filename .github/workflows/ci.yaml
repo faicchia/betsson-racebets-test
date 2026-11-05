@@ -11,6 +11,23 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: bcmath, intl, pdo_mysql
+          coverage: none
+
+      - uses: ramsey/composer-install@v3
+
+      - name: Check code style
+        run: vendor/bin/php-cs-fixer check --diff
+
   lint-config:
     name: Lint config
     runs-on: ubuntu-latest

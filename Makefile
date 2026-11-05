@@ -55,6 +55,14 @@ db-reset: ## Wipe the database volume and recreate both databases from docker/my
 test: ## Run the test suite, e.g. make test c="--testsuite=Unit" or c="--filter=customer"
 	$(EXEC) php vendor/bin/pest $(c)
 
+.PHONY: lint
+lint: ## Check the code style with PHP-CS-Fixer, showing what would change (same check as CI)
+	$(EXEC) php vendor/bin/php-cs-fixer check --diff
+
+.PHONY: lint-fix
+lint-fix: ## Fix the code style with PHP-CS-Fixer
+	$(EXEC) php vendor/bin/php-cs-fixer fix
+
 .PHONY: lint-config
 lint-config: ## Run the linters: composer.json, YAML config and the service container
 	$(EXEC) composer validate --strict --no-check-publish

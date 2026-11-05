@@ -15,7 +15,7 @@ final readonly class PdoCustomerRepository implements CustomerRepository
     private const string DATETIME_FORMAT = 'Y-m-d H:i:s.u';
 
     public function __construct(
-        private Connection $connection
+        private Connection $connection,
     ) {
     }
 
@@ -29,7 +29,7 @@ final readonly class PdoCustomerRepository implements CustomerRepository
                     VALUES
                         (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     SQL,
-                    self::toParameters($customer),
+                self::toParameters($customer),
             );
         } catch (PDOException $e) {
             if (self::isDuplicateKey($e, 'uq_customers_email')) {

@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CustomerController extends AbstractController
 {
     public function __construct(
-        private readonly CustomerService $customers
+        private readonly CustomerService $customers,
     ) {
     }
 
