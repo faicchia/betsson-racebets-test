@@ -78,6 +78,21 @@ paths:
           type: string
           format: uuid
           example: 019a5a00-0000-7000-8000-000000000001
+    get:
+      tags: [Customers]
+      operationId: getCustomer
+      summary: Get a customer
+      description: Returns the customer's registration details and current balances.
+      responses:
+        '200':
+          description: The customer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          $ref: '#/components/responses/CustomerNotFound'
+
     patch:
       tags: [Customers]
       operationId: updateCustomer
@@ -102,15 +117,7 @@ paths:
         '400':
           $ref: '#/components/responses/MalformedJson'
         '404':
-          description: No customer has this id.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              example:
-                status: 404
-                message: "Customer '019a5a00-0000-7000-8000-000000000001' not found."
-                errors: {}
+          $ref: '#/components/responses/CustomerNotFound'
         '409':
           description: The email is already used by another customer. Emails are compared case-insensitively.
           content:
@@ -277,6 +284,17 @@ components:
             type: string
 
   responses:
+    CustomerNotFound:
+      description: No customer has this id.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: 404
+            message: "Customer '019a5a00-0000-7000-8000-000000000001' not found."
+            errors: {}
+
     MalformedJson:
       description: The body is not valid JSON.
       content:

@@ -36,6 +36,14 @@ final class CustomerController extends AbstractController
         );
     }
 
+    #[Route('/{id}', name: 'customer_get', requirements: ['id' => Requirement::UUID], methods: ['GET'])]
+    public function get(Uuid $id): JsonResponse
+    {
+        $customer = $this->customers->get($id);
+
+        return $this->json(CustomerResponse::fromCustomer($customer));
+    }
+
     #[Route('/{id}', name: 'customer_update', requirements: ['id' => Requirement::UUID], methods: ['PATCH'])]
     public function update(Uuid $id, #[MapRequestPayload(acceptFormat: 'json')] UpdateCustomerRequest $request): JsonResponse
     {

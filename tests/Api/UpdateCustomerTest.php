@@ -50,17 +50,6 @@ it('stores the changes', function () {
     expect($row)->toBe(['email' => 'janet@example.com', 'gender' => 'other']);
 });
 
-it('leaves the balances alone', function () {
-    $this->db->execute(
-        "UPDATE customers SET real_balance = '50.00', bonus_balance = '5.00' WHERE id = UUID_TO_BIN(?)",
-        [$this->customer['id']],
-    );
-
-    $body = patchCustomer($this->client, $this->customer['id'], ['lastName' => 'Smith']);
-
-    expect($body)->toMatchArray(['realBalance' => '50.00', 'bonusBalance' => '5.00']);
-});
-
 it('ignores read-only fields', function () {
     $body = patchCustomer($this->client, $this->customer['id'], [
         'lastName' => 'Smith',

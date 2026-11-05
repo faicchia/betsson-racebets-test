@@ -56,6 +56,16 @@ final readonly class CustomerService
     }
 
     /**
+     * @throws CustomerNotFound
+     */
+    public function get(Uuid $id): Customer
+    {
+        return $this->transactions->transactional(
+            fn (): Customer => $this->customers->find($id) ?? throw CustomerNotFound::withId($id),
+        );
+    }
+
+    /**
      * @throws NothingToUpdate
      * @throws CustomerNotFound
      * @throws EmailAlreadyTaken
