@@ -50,3 +50,7 @@ console: ## Run bin/console in the app container, e.g. make console c="debug:rou
 db-reset: ## Wipe the database volume and recreate both databases from docker/mysql/schema.sql (deletes all data)
 	$(COMPOSE) down -v
 	$(COMPOSE) up -d --build
+
+.PHONY: test
+test: ## Run the test suite, e.g. make test c="--testsuite=Unit" or c="--filter=customer"
+	$(EXEC) php vendor/bin/pest $(c)
