@@ -45,3 +45,8 @@ composer: ## Run composer in the app container, e.g. make composer c="require fo
 .PHONY: console
 console: ## Run bin/console in the app container, e.g. make console c="debug:router"
 	$(EXEC) php bin/console $(c)
+
+.PHONY: db-reset
+db-reset: ## Wipe the database volume and recreate both databases from docker/mysql/schema.sql (deletes all data)
+	$(COMPOSE) down -v
+	$(COMPOSE) up -d --build

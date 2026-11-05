@@ -34,7 +34,8 @@ services:
       MYSQL_PASSWORD: "123456"
     volumes:
       - db-data:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./docker/mysql/initdb:/docker-entrypoint-initdb.d:ro
+      - ./docker/mysql/schema.sql:/schema/schema.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
       interval: 5s
