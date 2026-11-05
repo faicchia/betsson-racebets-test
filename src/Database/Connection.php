@@ -52,6 +52,26 @@ final class Connection
         return false === $row ? null : $row;
     }
 
+    public function beginTransaction(): void
+    {
+        $this->pdo()->beginTransaction();
+    }
+
+    public function commit(): void
+    {
+        $this->pdo()->commit();
+    }
+
+    public function rollBack(): void
+    {
+        $this->pdo()->rollBack();
+    }
+
+    public function inTransaction(): bool
+    {
+        return $this->pdo()->inTransaction();
+    }
+
     private function pdo(): PDO
     {
         return $this->pdo ??= new PDO(

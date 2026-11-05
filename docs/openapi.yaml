@@ -68,6 +68,86 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationFailed'
 
+  /api/customers/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The customer's UUID. A value that is not a UUID returns 404.
+        schema:
+          type: string
+          format: uuid
+          example: 019a5a00-0000-7000-8000-000000000001
+    patch:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Update a customer's registration details
+      description: |
+        Changes only the fields that are sent; the others keep their value. At least one field is required,
+        and a field sent as `null` is rejected. `bonusPercent`, the balances and the timestamps are read-only
+        and ignored if sent. Changing the country does not affect past transactions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+      responses:
+        '200':
+          description: Customer updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/MalformedJson'
+        '404':
+          description: No customer has this id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                status: 404
+                message: "Customer '019a5a00-0000-7000-8000-000000000001' not found."
+                errors: {}
+        '409':
+          description: The email is already used by another customer. Emails are compared case-insensitively.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                status: 409
+                message: "The email 'jane.doe@example.com' is already taken."
+                errors:
+                  email: This email is already taken.
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          description: |
+            A field is invalid or `null` (each field reports only its first failed check),
+            or the body contains no field to update.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidFields:
+                  summary: Invalid fields
+                  value:
+                    status: 422
+                    message: The request contains invalid fields.
+                    errors:
+                      firstName: This value should be of type string.
+                      country: This value is not a valid country.
+                nothingToUpdate:
+                  summary: No field to update
+                  value:
+                    status: 422
+                    message: The request must contain at least one field to update.
+                    errors: {}
+
 components:
   schemas:
     CreateCustomerRequest:
@@ -84,6 +164,31 @@ components:
           minLength: 1
           maxLength: 100
           example: Jane
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Doe
+        gender:
+          $ref: '#/components/schemas/Gender'
+        country:
+          $ref: '#/components/schemas/Country'
+
+    UpdateCustomerRequest:
+      type: object
+      minProperties: 1
+      description: Send only the fields to change. None of them may be `null`.
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: janet.doe@example.com
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Janet
         lastName:
           type: string
           minLength: 1

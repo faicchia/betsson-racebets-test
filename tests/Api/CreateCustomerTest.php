@@ -2,36 +2,10 @@
 
 declare(strict_types=1);
 
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
-
 beforeEach(function () {
     $this->client = self::createClient();
     self::getContainer()->get(App\Database\Connection::class)->execute('DELETE FROM customers');
 });
-
-function postCustomer(KernelBrowser $client, array|string $payload): array
-{
-    $client->request(
-        'POST',
-        '/api/customers',
-        server: ['CONTENT_TYPE' => 'application/json'],
-        content: is_string($payload) ? $payload : json_encode($payload),
-    );
-
-    return json_decode($client->getResponse()->getContent(), true) ?? [];
-}
-
-function validCustomer(array $overrides = []): array
-{
-    return [
-        'email' => 'jane.doe@example.com',
-        'firstName' => 'Jane',
-        'lastName' => 'Doe',
-        'gender' => 'female',
-        'country' => 'DE',
-        ...$overrides,
-    ];
-}
 
 it('creates a customer', function () {
     $body = postCustomer($this->client, validCustomer());

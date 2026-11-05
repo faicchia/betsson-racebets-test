@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
+use App\Exception\CustomerNotFound;
 use App\Exception\EmailAlreadyTaken;
+use App\Exception\NothingToUpdate;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,6 +43,14 @@ final class ExceptionListener
                 Response::HTTP_CONFLICT,
                 $exception->getMessage(),
                 ['email' => 'This email is already taken.'],
+            ),
+            $exception instanceof CustomerNotFound => self::jsonResponse(
+                Response::HTTP_NOT_FOUND,
+                $exception->getMessage(),
+            ),
+            $exception instanceof NothingToUpdate => self::jsonResponse(
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+                $exception->getMessage(),
             ),
             $exception instanceof HttpExceptionInterface => self::jsonResponse(
                 $exception->getStatusCode(),

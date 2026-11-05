@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Database\TransactionManager;
+use App\Exception\CustomerNotFound;
 use App\Exception\EmailAlreadyTaken;
+use App\Exception\NothingToUpdate;
 use App\Model\Customer;
 use App\Repository\CustomerRepository;
 use App\Request\CreateCustomerRequest;
+use App\Request\UpdateCustomerRequest;
 use App\ValueObject\Gender;
 use App\ValueObject\Money;
 use DateTimeImmutable;
@@ -21,6 +25,7 @@ final readonly class CustomerService
 
     public function __construct(
         private CustomerRepository $customers,
+        private TransactionManager $transactions,
     ) {
     }
 
@@ -48,5 +53,27 @@ final readonly class CustomerService
         $this->customers->add($customer);
 
         return $customer;
+    }
+
+    /**
+     * @throws NothingToUpdate
+     * @throws CustomerNotFound
+     * @throws EmailAlreadyTaken
+     */
+    public function update(Uuid $id, UpdateCustomerRequest $request): Customer
+    {
+        $fields = $request->changes();
+
+        if ([] === $fields) {
+            throw new NothingToUpdate();
+        }
+
+        return $this->transactions->transactional(function () use ($id, $fields): Customer {
+            if (!$this->customers->update($id, $fields)) {
+                throw CustomerNotFound::withId($id);
+            }
+
+            return $this->customers->find($id) ?? throw CustomerNotFound::withId($id);
+        });
     }
 }
