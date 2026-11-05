@@ -9,7 +9,7 @@ export GID := $(shell id -g)
 
 .PHONY: help
 help: ## List available commands
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: up
 up: ## Build and start all containers in the background
@@ -54,3 +54,9 @@ db-reset: ## Wipe the database volume and recreate both databases from docker/my
 .PHONY: test
 test: ## Run the test suite, e.g. make test c="--testsuite=Unit" or c="--filter=customer"
 	$(EXEC) php vendor/bin/pest $(c)
+
+.PHONY: lint-config
+lint-config: ## Run the linters: composer.json, YAML config and the service container
+	$(EXEC) composer validate --strict --no-check-publish
+	$(EXEC) php bin/console lint:yaml config --parse-tags
+	$(EXEC) php bin/console lint:container

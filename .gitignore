@@ -78,6 +78,10 @@ composer.phar
 /vendor/
 ###< symfony/framework-bundle ###
 
+### Symfony config reference
+# Regenerated on every debug container build and only useful for PHP config files; this project uses YAML.
+/config/reference.php
+
 ### VSCode
 .vscode/
 

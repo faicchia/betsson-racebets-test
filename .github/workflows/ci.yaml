@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-config:
+    name: Lint config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: bcmath, intl, pdo_mysql
+          coverage: none
+
+      - uses: ramsey/composer-install@v3
+
+      - name: Validate composer.json
+        run: composer validate --strict --no-check-publish
+
+      - name: Lint YAML config
+        run: php bin/console lint:yaml config --parse-tags
+
+      - name: Lint service container
+        run: php bin/console lint:container
+
+  tests:
+    name: Tests (Pest)
+    runs-on: ubuntu-latest
+
+    # Same image and credentials as docker-compose.yaml, but the database is created directly as the test one.
+    services:
+      db:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: racebets_test
+          MYSQL_USER: user
+          MYSQL_PASSWORD: '123456'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      # Real environment variables win over .env files; the rest of the DB settings come from .env / .env.test.
+      DB_HOST: 127.0.0.1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: bcmath, intl, pdo_mysql
+          coverage: none
+
+      - uses: ramsey/composer-install@v3
+
+      - name: Apply the schema to the test database
+        run: mysql --host=127.0.0.1 --user=user --password=123456 racebets_test < docker/mysql/schema.sql
+
+      - name: Run Pest
+        run: vendor/bin/pest
