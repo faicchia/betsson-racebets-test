@@ -27,6 +27,11 @@ final readonly class PdoTransactionRepository implements TransactionRepository
         return $this->insert($customer, TransactionType::Deposit, $amount, $bonusAmount);
     }
 
+    public function withdraw(Customer $customer, Money $amount): Transaction
+    {
+        return $this->insert($customer, TransactionType::Withdrawal, $amount, Money::zero());
+    }
+
     public function countDeposits(Uuid $customerId): int
     {
         /** @var array{count: int} $row */

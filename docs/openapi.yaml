@@ -192,6 +192,59 @@ paths:
                 errors:
                   amount: This value must be an amount with at most two decimals.
 
+  /api/customers/{id}/withdrawals:
+    parameters:
+      - $ref: '#/components/parameters/CustomerId'
+    post:
+      tags: [Transactions]
+      operationId: withdraw
+      summary: Withdraw money
+      description: |
+        Takes the amount from the real balance. The bonus balance is never withdrawable, so the amount
+        must not exceed the real balance.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WithdrawalRequest'
+      responses:
+        '201':
+          description: Withdrawal recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Withdrawal'
+        '400':
+          $ref: '#/components/responses/MalformedJson'
+        '404':
+          $ref: '#/components/responses/CustomerNotFound'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          description: |
+            The amount is missing, not a string, not positive, has more than two decimals or exceeds 10000.00,
+            or it exceeds the real balance.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidAmount:
+                  summary: Invalid amount
+                  value:
+                    status: 422
+                    message: The request contains invalid fields.
+                    errors:
+                      amount: This value must be an amount with at most two decimals.
+                insufficientFunds:
+                  summary: Amount above the real balance
+                  value:
+                    status: 422
+                    message: "Insufficient funds: the withdrawable balance is '100.00'."
+                    errors:
+                      amount: This value exceeds the withdrawable balance.
+
 components:
   parameters:
     CustomerId:
@@ -341,6 +394,46 @@ components:
           type: string
           format: date-time
           description: When the deposit happened, in UTC.
+          example: '2026-11-05T20:23:07.467+00:00'
+
+    WithdrawalRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: string
+          pattern: '^\d+(\.\d{1,2})?$'
+          description: |
+            Decimal amount as a string, greater than 0 and at most 10000.00, with up to two decimals.
+            It must not exceed the real balance. A JSON number is rejected.
+          example: '50.00'
+
+    Withdrawal:
+      type: object
+      required: [transactionId, customerId, amount, realBalance, bonusBalance, createdAt]
+      properties:
+        transactionId:
+          type: integer
+          description: Id of the ledger row.
+          example: 43
+        customerId:
+          type: string
+          format: uuid
+          example: 019a5a00-0000-7000-8000-000000000001
+        amount:
+          $ref: '#/components/schemas/Money'
+        realBalance:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+          description: Real balance after the withdrawal.
+        bonusBalance:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+          description: Bonus balance, unchanged by the withdrawal.
+        createdAt:
+          type: string
+          format: date-time
+          description: When the withdrawal happened, in UTC.
           example: '2026-11-05T20:23:07.467+00:00'
 
     Gender:

@@ -13,5 +13,7 @@ interface TransactionRepository
 {
     public function deposit(Customer $customer, Money $amount, Money $bonusAmount): Transaction;
 
+    public function withdraw(Customer $customer, Money $amount): Transaction;
+
     public function countDeposits(Uuid $customerId): int;
 }

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Request\DepositRequest;
+use App\Request\WithdrawalRequest;
 use App\Response\DepositResponse;
+use App\Response\WithdrawalResponse;
 use App\Service\BalanceService;
 use App\ValueObject\Money;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -33,6 +35,19 @@ final class BalanceController extends AbstractController
 
         return $this->json(
             DepositResponse::fromBalanceUpdate($balanceUpdate),
+            Response::HTTP_CREATED,
+        );
+    }
+
+    #[Route('/withdrawals', name: 'customer_withdrawal', methods: ['POST'])]
+    public function withdraw(Uuid $customerId, #[MapRequestPayload(acceptFormat: 'json')] WithdrawalRequest $request): JsonResponse
+    {
+        /** @var numeric-string $amount */
+        $amount = $request->amount;
+        $balanceUpdate = $this->balances->withdraw($customerId, Money::of($amount));
+
+        return $this->json(
+            WithdrawalResponse::fromBalanceUpdate($balanceUpdate),
             Response::HTTP_CREATED,
         );
     }

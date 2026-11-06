@@ -40,3 +40,15 @@ function validCustomer(array $overrides = []): array
         ...$overrides,
     ];
 }
+
+function postDeposit(KernelBrowser $client, string $id, array|string $payload): array
+{
+    $client->request(
+        'POST',
+        '/api/customers/'.$id.'/deposits',
+        server: ['CONTENT_TYPE' => 'application/json'],
+        content: is_string($payload) ? $payload : json_encode($payload),
+    );
+
+    return json_decode($client->getResponse()->getContent(), true) ?? [];
+}

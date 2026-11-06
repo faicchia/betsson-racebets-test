@@ -24,3 +24,15 @@ it('rounds the percent itself, not only when it is formatted', function () {
 
     expect($bonus->add($bonus)->toString())->toBe('1.72');
 });
+
+it('subtracts an amount', function () {
+    expect(Money::of('100.50')->subtract(Money::of('0.75'))->toString())->toBe('99.75');
+});
+
+it('compares two amounts', function (string $amount, string $other, bool $expected) {
+    expect(Money::of($amount)->isGreaterThan(Money::of($other)))->toBe($expected);
+})->with([
+    'greater' => ['100.01', '100.00', true],
+    'equal' => ['100.00', '100', false],
+    'less' => ['99.99', '100.00', false],
+]);

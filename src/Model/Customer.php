@@ -34,4 +34,12 @@ final readonly class Customer
             'updatedAt' => $deposit->createdAt,
         ]);
     }
+
+    public function applyWithdrawal(Transaction $withdrawal): self
+    {
+        return clone ($this, [
+            'realBalance' => $this->realBalance->subtract($withdrawal->amount),
+            'updatedAt' => $withdrawal->createdAt,
+        ]);
+    }
 }

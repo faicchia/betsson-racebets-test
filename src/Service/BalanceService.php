@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Database\TransactionManager;
 use App\Exception\CustomerNotFound;
+use App\Exception\InsufficientFunds;
 use App\Model\BalanceUpdate;
 use App\Model\Customer;
 use App\Repository\CustomerRepository;
@@ -37,6 +38,27 @@ final readonly class BalanceService
             $bonus = $this->calculateDepositBonus($customer, $amount);
             $transaction = $this->ledger->deposit($customer, $amount, $bonus);
             $customer = $customer->applyDeposit($transaction);
+            $this->customers->updateBalances($customer->id, ['realBalance' => $customer->realBalance, 'bonusBalance' => $customer->bonusBalance]);
+
+            return new BalanceUpdate($transaction, $customer);
+        });
+    }
+
+    /**
+     * Debits a customer's real balance. The bonus balance is never withdrawable.
+     *
+     * @throws CustomerNotFound
+     * @throws InsufficientFunds when the amount exceeds the real balance
+     */
+    public function withdraw(Uuid $customerId, Money $amount): BalanceUpdate
+    {
+        return $this->transactions->transactional(function () use ($customerId, $amount): BalanceUpdate {
+            $customer = $this->customers->findForUpdate($customerId) ?? throw CustomerNotFound::withId($customerId);
+            if ($amount->isGreaterThan($customer->realBalance)) {
+                throw InsufficientFunds::withWithdrawableBalance($customer->realBalance);
+            }
+            $transaction = $this->ledger->withdraw($customer, $amount);
+            $customer = $customer->applyWithdrawal($transaction);
             $this->customers->updateBalances($customer->id, ['realBalance' => $customer->realBalance, 'bonusBalance' => $customer->bonusBalance]);
 
             return new BalanceUpdate($transaction, $customer);

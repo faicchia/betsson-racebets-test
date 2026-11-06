@@ -6,6 +6,7 @@ namespace App\EventListener;
 
 use App\Exception\CustomerNotFound;
 use App\Exception\EmailAlreadyTaken;
+use App\Exception\InsufficientFunds;
 use App\Exception\NothingToUpdate;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -47,6 +48,11 @@ final class ExceptionListener
             $exception instanceof CustomerNotFound => self::jsonResponse(
                 Response::HTTP_NOT_FOUND,
                 $exception->getMessage(),
+            ),
+            $exception instanceof InsufficientFunds => self::jsonResponse(
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+                $exception->getMessage(),
+                ['amount' => 'This value exceeds the withdrawable balance.'],
             ),
             $exception instanceof NothingToUpdate => self::jsonResponse(
                 Response::HTTP_UNPROCESSABLE_ENTITY,

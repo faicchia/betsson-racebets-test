@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
-
 beforeEach(function () {
     $this->client = self::createClient();
     $this->db = self::getContainer()->get(App\Database\Connection::class);
@@ -12,18 +10,6 @@ beforeEach(function () {
     // a known percent makes the bonus predictable
     $this->db->execute('UPDATE customers SET bonus_percent = 10 WHERE id = UUID_TO_BIN(?)', [$this->customer['id']]);
 });
-
-function postDeposit(KernelBrowser $client, string $id, array|string $payload): array
-{
-    $client->request(
-        'POST',
-        '/api/customers/'.$id.'/deposits',
-        server: ['CONTENT_TYPE' => 'application/json'],
-        content: is_string($payload) ? $payload : json_encode($payload),
-    );
-
-    return json_decode($client->getResponse()->getContent(), true) ?? [];
-}
 
 it('deposits money into the real balance', function () {
     $body = postDeposit($this->client, $this->customer['id'], ['amount' => '100.50']);

@@ -36,6 +36,16 @@ final readonly class Money
         return new self($this->amount + $other->amount);
     }
 
+    public function subtract(self $other): self
+    {
+        return new self($this->amount - $other->amount);
+    }
+
+    public function isGreaterThan(self $other): bool
+    {
+        return $this->amount > $other->amount;
+    }
+
     /**
      * @return self the share rounded half-up to the cent, so the stored value is the one shown
      */
