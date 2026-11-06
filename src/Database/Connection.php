@@ -52,6 +52,22 @@ final class Connection
         return false === $row ? null : $row;
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function fetchAll(string $sql, array $params = []): array
+    {
+        $statement = $this->pdo()->prepare($sql);
+        $statement->execute($params);
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $statement->fetchAll();
+
+        return $rows;
+    }
+
     public function beginTransaction(): void
     {
         $this->pdo()->beginTransaction();

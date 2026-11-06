@@ -23,6 +23,8 @@ tags:
     description: Registration details and balances of customers.
   - name: Transactions
     description: Deposits and withdrawals. Each one is recorded in the ledger.
+  - name: Reports
+    description: Reporting functionalities over deposits and withdrawals, such as daily totals per country.
 
 paths:
   /api/customers:
@@ -245,6 +247,51 @@ paths:
                     errors:
                       amount: This value exceeds the withdrawable balance.
 
+  /api/reports/daily-transaction-totals:
+    get:
+      tags: [Reports]
+      operationId: dailyTransactionTotals
+      summary: Daily deposits and withdrawals per country
+      description: |
+        One entry per date and country with at least one deposit or withdrawal, sorted by date descending,
+        then country ascending. Dates are UTC. Each transaction counts toward the customer's country at the
+        time it happened, so a later country change does not move past totals.
+      parameters:
+        - name: from
+          in: query
+          required: false
+          description: First date of the range, included. Defaults to 6 days before `to`.
+          schema:
+            type: string
+            format: date
+            example: '2015-05-01'
+        - name: to
+          in: query
+          required: false
+          description: Last date of the range, included. Defaults to today (UTC).
+          schema:
+            type: string
+            format: date
+            example: '2015-05-07'
+      responses:
+        '200':
+          description: The report. `from` and `to` are the range actually used, after defaults.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionReport'
+        '422':
+          description: A date is blank or not a valid `YYYY-MM-DD` date, or `from` is after `to`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                status: 422
+                message: The request contains invalid fields.
+                errors:
+                  from: This value must not be after the end of the range.
+
 components:
   parameters:
     CustomerId:
@@ -435,6 +482,54 @@ components:
           format: date-time
           description: When the withdrawal happened, in UTC.
           example: '2026-11-05T20:23:07.467+00:00'
+
+    TransactionReport:
+      type: object
+      required: [from, to, data]
+      properties:
+        from:
+          type: string
+          format: date
+          example: '2015-05-01'
+        to:
+          type: string
+          format: date
+          example: '2015-05-07'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionReportEntry'
+
+    TransactionReportEntry:
+      type: object
+      required: [date, country, uniqueCustomers, depositCount, depositTotal, withdrawalCount, withdrawalTotal]
+      properties:
+        date:
+          type: string
+          format: date
+          description: UTC date.
+          example: '2015-05-06'
+        country:
+          $ref: '#/components/schemas/Country'
+        uniqueCustomers:
+          type: integer
+          description: Customers with at least one deposit or withdrawal that day in that country.
+          example: 32
+        depositCount:
+          type: integer
+          example: 45
+        depositTotal:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+          example: '456.34'
+        withdrawalCount:
+          type: integer
+          example: 24
+        withdrawalTotal:
+          type: string
+          pattern: '^-?\d+\.\d{2}$'
+          description: Negative sum of the withdrawals, or `0.00` when there were none.
+          example: '-200.45'
 
     Gender:
       type: string

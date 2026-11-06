@@ -7,6 +7,7 @@ namespace App\EventListener;
 use App\Exception\CustomerNotFound;
 use App\Exception\EmailAlreadyTaken;
 use App\Exception\InsufficientFunds;
+use App\Exception\InvalidReportRange;
 use App\Exception\NothingToUpdate;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -53,6 +54,11 @@ final class ExceptionListener
                 Response::HTTP_UNPROCESSABLE_ENTITY,
                 $exception->getMessage(),
                 ['amount' => 'This value exceeds the withdrawable balance.'],
+            ),
+            $exception instanceof InvalidReportRange => self::jsonResponse(
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+                'The request contains invalid fields.',
+                ['from' => $exception->getMessage()],
             ),
             $exception instanceof NothingToUpdate => self::jsonResponse(
                 Response::HTTP_UNPROCESSABLE_ENTITY,
