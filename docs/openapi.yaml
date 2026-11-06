@@ -21,6 +21,8 @@ security: []
 tags:
   - name: Customers
     description: Registration details and balances of customers.
+  - name: Transactions
+    description: Deposits and withdrawals. Each one is recorded in the ledger.
 
 paths:
   /api/customers:
@@ -70,14 +72,7 @@ paths:
 
   /api/customers/{id}:
     parameters:
-      - name: id
-        in: path
-        required: true
-        description: The customer's UUID. A value that is not a UUID returns 404.
-        schema:
-          type: string
-          format: uuid
-          example: 019a5a00-0000-7000-8000-000000000001
+      - $ref: '#/components/parameters/CustomerId'
     get:
       tags: [Customers]
       operationId: getCustomer
@@ -155,7 +150,60 @@ paths:
                     message: The request must contain at least one field to update.
                     errors: {}
 
+  /api/customers/{id}/deposits:
+    parameters:
+      - $ref: '#/components/parameters/CustomerId'
+    post:
+      tags: [Transactions]
+      operationId: deposit
+      summary: Deposit money
+      description: |
+        Adds the amount to the real balance. The customer's 3rd, 6th, 9th… successful deposit also credits
+        `amount × bonusPercent / 100`, rounded half-up to the cent, to the bonus balance. Rejected deposits
+        do not count toward the bonus.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepositRequest'
+      responses:
+        '201':
+          description: Deposit recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deposit'
+        '400':
+          $ref: '#/components/responses/MalformedJson'
+        '404':
+          $ref: '#/components/responses/CustomerNotFound'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          description: The amount is missing, not a string, not positive, has more than two decimals or exceeds 10000.00.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                status: 422
+                message: The request contains invalid fields.
+                errors:
+                  amount: This value must be an amount with at most two decimals.
+
 components:
+  parameters:
+    CustomerId:
+      name: id
+      in: path
+      required: true
+      description: The customer's UUID. A value that is not a UUID returns 404.
+      schema:
+        type: string
+        format: uuid
+        example: 019a5a00-0000-7000-8000-000000000001
+
   schemas:
     CreateCustomerRequest:
       type: object
@@ -249,6 +297,50 @@ components:
           type: string
           format: date-time
           description: UTC.
+          example: '2026-11-05T20:23:07.467+00:00'
+
+    DepositRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: string
+          pattern: '^\d+(\.\d{1,2})?$'
+          description: |
+            Decimal amount as a string, greater than 0 and at most 10000.00, with up to two decimals.
+            A JSON number is rejected.
+          example: '100.00'
+
+    Deposit:
+      type: object
+      required: [transactionId, customerId, amount, bonusAmount, realBalance, bonusBalance, createdAt]
+      properties:
+        transactionId:
+          type: integer
+          description: Id of the ledger row.
+          example: 42
+        customerId:
+          type: string
+          format: uuid
+          example: 019a5a00-0000-7000-8000-000000000001
+        amount:
+          $ref: '#/components/schemas/Money'
+        bonusAmount:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+          description: Bonus credited by this deposit. `0.00` unless it is the customer's 3rd, 6th, 9th… deposit.
+        realBalance:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+          description: Real balance after the deposit.
+        bonusBalance:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+          description: Bonus balance after the deposit.
+        createdAt:
+          type: string
+          format: date-time
+          description: When the deposit happened, in UTC.
           example: '2026-11-05T20:23:07.467+00:00'
 
     Gender:

@@ -79,7 +79,7 @@ final readonly class CustomerService
         }
 
         return $this->transactions->transactional(function () use ($id, $fields): Customer {
-            if (!$this->customers->update($id, $fields)) {
+            if (!$this->customers->updateDetails($id, $fields)) {
                 throw CustomerNotFound::withId($id);
             }
 

@@ -7,10 +7,6 @@ namespace App\Request;
 use App\ValueObject\Gender;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * A missing field defaults to '' so it fails NotBlank like any other invalid value,
- * instead of failing deserialization with a type error that hides the remaining violations.
- */
 final readonly class CreateCustomerRequest
 {
     public function __construct(

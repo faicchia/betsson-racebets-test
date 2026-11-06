@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Exception\EmailAlreadyTaken;
 use App\Model\Customer;
+use App\ValueObject\Money;
 use Symfony\Component\Uid\Uuid;
 
 interface CustomerRepository
@@ -26,5 +27,17 @@ interface CustomerRepository
      *
      * @throws EmailAlreadyTaken
      */
-    public function update(Uuid $id, array $fields): bool;
+    public function updateDetails(Uuid $id, array $fields): bool;
+
+    /**
+     * Sets both balances and sets updated_at to now.
+     *
+     * @param array{realBalance: Money, bonusBalance: Money} $fields keyed by Customer property
+     */
+    public function updateBalances(Uuid $id, array $fields): void;
+
+    /**
+     * Locks the row until the surrounding DB transaction ends, so balance changes on one customer run one at a time.
+     */
+    public function findForUpdate(Uuid $id): ?Customer;
 }

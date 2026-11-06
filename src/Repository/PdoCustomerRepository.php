@@ -58,19 +58,15 @@ final readonly class PdoCustomerRepository implements CustomerRepository
 
     public function find(Uuid $id): ?Customer
     {
-        $row = $this->connection->fetchOne(
-            <<<'SQL'
-                SELECT id, email, first_name, last_name, gender, country, bonus_percent, real_balance, bonus_balance, created_at, updated_at
-                FROM customers
-                WHERE id = ?
-                SQL,
-            [$id->toBinary()],
-        );
-
-        return null === $row ? null : self::toCustomer($row);
+        return $this->fetch($id, lock: false);
     }
 
-    public function update(Uuid $id, array $fields): bool
+    public function findForUpdate(Uuid $id): ?Customer
+    {
+        return $this->fetch($id, lock: true);
+    }
+
+    public function updateDetails(Uuid $id, array $fields): bool
     {
         $assignments = [];
         $parameters = [];
@@ -92,6 +88,33 @@ final readonly class PdoCustomerRepository implements CustomerRepository
 
             throw $e;
         }
+    }
+
+    public function updateBalances(Uuid $id, array $fields): void
+    {
+        $this->connection->execute(
+            'UPDATE customers SET real_balance = ?, bonus_balance = ?, updated_at = ? WHERE id = ?',
+            [
+                $fields['realBalance']->toString(),
+                $fields['bonusBalance']->toString(),
+                (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(self::DATETIME_FORMAT),
+                $id->toBinary(),
+            ],
+        );
+    }
+
+    private function fetch(Uuid $id, bool $lock): ?Customer
+    {
+        $row = $this->connection->fetchOne(
+            <<<'SQL'
+                SELECT id, email, first_name, last_name, gender, country, bonus_percent, real_balance, bonus_balance, created_at, updated_at
+                FROM customers
+                WHERE id = ?
+                SQL.($lock ? ' FOR UPDATE' : ''),
+            [$id->toBinary()],
+        );
+
+        return null === $row ? null : self::toCustomer($row);
     }
 
     /**

@@ -25,4 +25,13 @@ final readonly class Customer
         public DateTimeImmutable $updatedAt,
     ) {
     }
+
+    public function applyDeposit(Transaction $deposit): self
+    {
+        return clone ($this, [
+            'realBalance' => $this->realBalance->add($deposit->amount),
+            'bonusBalance' => $this->bonusBalance->add($deposit->bonusAmount),
+            'updatedAt' => $deposit->createdAt,
+        ]);
+    }
 }
