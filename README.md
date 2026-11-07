@@ -13,7 +13,7 @@ Requests and responses are JSON. Request bodies must be sent with `Content-Type:
 | `PATCH` | `/api/customers/{id}` | Edit registration details (partial update) | `200` + customer |
 | `POST` | `/api/customers/{id}/deposits` | Deposit money | `201` + transaction + new balances |
 | `POST` | `/api/customers/{id}/withdrawals` | Withdraw money | `201` + transaction + new balances |
-| `GET` | `/api/reports/daily-transaction-totals?from=YYYY-MM-DD&to=YYYY-MM-DD` | Daily totals per country | `200` + report rows |
+| `GET` | `/api/reports/daily-transaction-totals?from=YYYY-MM-DD&to=YYYY-MM-DD` | Daily totals per country (range of at most 3 months) | `200` + report rows |
 
 ## Currency
 
