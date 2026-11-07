@@ -15,6 +15,10 @@ Requests and responses are JSON. Request bodies must be sent with `Content-Type:
 | `POST` | `/api/customers/{id}/withdrawals` | Withdraw money | `201` + transaction + new balances |
 | `GET` | `/api/reports/daily-transaction-totals?from=YYYY-MM-DD&to=YYYY-MM-DD` | Daily totals per country | `200` + report rows |
 
+## Currency
+
+The only currency considered in this project is **EUR**. Each customer has a single set of balances (real and bonus) with no currency attached: the API never accepts or returns a currency code, the database stores none, and the `Money` value object holds only an amount. Amounts are decimal strings with two decimals (e.g. `"100.00"`) and are always EUR.
+
 ## Tech Stack
 
 - **PHP 8.5**, with `ext-bcmath` for money arithmetic
