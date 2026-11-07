@@ -119,10 +119,22 @@ it('defaults the start to 6 days before a given end', function () {
 });
 
 it('defaults the end to today when only the start is given', function () {
-    $body = getReport($this->client, ['from' => '2015-05-06']);
+    $today = new DateTimeImmutable('today', new DateTimeZone('UTC'));
+    $from = $today->modify('-10 days')->format('Y-m-d');
 
-    expect($body)->toMatchArray(['from' => '2015-05-06', 'to' => new DateTimeImmutable('today', new DateTimeZone('UTC'))->format('Y-m-d')]);
+    $body = getReport($this->client, ['from' => $from]);
+
+    expect($body)->toMatchArray(['from' => $from, 'to' => $today->format('Y-m-d')]);
 });
+
+it('accepts a range of up to 3 months', function (string $from, string $to) {
+    getReport($this->client, ['from' => $from, 'to' => $to]);
+
+    expect($this->client->getResponse()->getStatusCode())->toBe(200);
+})->with([
+    'from the 1st' => ['2015-01-01', '2015-03-31'],
+    'from mid-month' => ['2015-05-06', '2015-08-05'],
+]);
 
 it('returns no entries for a range without transactions', function () {
     $body = getReport($this->client, ['from' => '2015-05-06', 'to' => '2015-05-06']);
@@ -146,4 +158,6 @@ it('rejects an invalid range with 422', function (array $query, array $errors) {
     'wrong format' => [['from' => '06.05.2015'], ['from' => 'This value is not a valid date.']],
     'blank' => [['from' => ''], ['from' => 'This value should not be blank.']],
     'start after end' => [['from' => '2015-05-07', 'to' => '2015-05-06'], ['from' => 'This value must not be after the end of the range.']],
+    'longer than 3 months' => [['from' => '2015-05-06', 'to' => '2015-08-06'], ['from' => 'This value must be less than 3 months before the end of the range.']],
+    'only the start, too far back' => [['from' => '2015-05-06'], ['from' => 'This value must be less than 3 months before the end of the range.']],
 ]);
