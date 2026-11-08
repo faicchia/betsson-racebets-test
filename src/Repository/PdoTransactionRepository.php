@@ -12,6 +12,7 @@ use App\ValueObject\Money;
 use App\ValueObject\TransactionType;
 use DateTimeImmutable;
 use DateTimeZone;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class PdoTransactionRepository implements TransactionRepository
@@ -20,6 +21,7 @@ final readonly class PdoTransactionRepository implements TransactionRepository
 
     public function __construct(
         private Connection $connection,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -46,7 +48,7 @@ final readonly class PdoTransactionRepository implements TransactionRepository
 
     private function insert(Customer $customer, TransactionType $type, Money $amount, Money $bonusAmount): Transaction
     {
-        $createdAt = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $createdAt = $this->clock->now();
 
         $this->connection->execute(
             <<<'SQL'

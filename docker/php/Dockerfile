@@ -11,6 +11,8 @@ RUN apt-get update \
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+RUN echo 'date.timezone = UTC' > "$PHP_INI_DIR/conf.d/timezone.ini"
+
 RUN groupmod -o -g "${GID}" www-data \
     && usermod -o -u "${UID}" -g www-data www-data
 

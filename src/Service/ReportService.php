@@ -8,7 +8,7 @@ use App\Exception\InvalidReportRange;
 use App\Model\Report;
 use App\Repository\TransactionRepository;
 use DateTimeImmutable;
-use DateTimeZone;
+use Psr\Clock\ClockInterface;
 
 final readonly class ReportService
 {
@@ -19,6 +19,7 @@ final readonly class ReportService
 
     public function __construct(
         private TransactionRepository $ledger,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -31,7 +32,7 @@ final readonly class ReportService
      */
     public function dailyTotalsByCountry(?DateTimeImmutable $from, ?DateTimeImmutable $to): Report
     {
-        $to ??= new DateTimeImmutable('today', new DateTimeZone('UTC'));
+        $to ??= $this->clock->now()->setTime(0, 0);
         $from ??= $to->modify(sprintf('-%d days', self::DEFAULT_DAYS - 1));
 
         if ($from > $to) {

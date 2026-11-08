@@ -14,8 +14,7 @@ use App\Request\CreateCustomerRequest;
 use App\Request\UpdateCustomerRequest;
 use App\ValueObject\Gender;
 use App\ValueObject\Money;
-use DateTimeImmutable;
-use DateTimeZone;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class CustomerService
@@ -26,6 +25,7 @@ final readonly class CustomerService
     public function __construct(
         private CustomerRepository $customers,
         private TransactionManager $transactions,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -34,7 +34,7 @@ final readonly class CustomerService
      */
     public function create(CreateCustomerRequest $request): Customer
     {
-        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $now = $this->clock->now();
 
         $customer = new Customer(
             id: Uuid::v7(),

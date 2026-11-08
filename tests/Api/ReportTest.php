@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Database\Connection;
+use Symfony\Component\Clock\Test\ClockSensitiveTrait;
+
+uses(ClockSensitiveTrait::class);
 
 beforeEach(function () {
     $this->client = self::createClient();
@@ -100,7 +103,8 @@ it('groups by the country at the time of the transaction', function () {
 });
 
 it('defaults to the last 7 days including today', function () {
-    $today = new DateTimeImmutable('today', new DateTimeZone('UTC'));
+    $today = new DateTimeImmutable('2015-05-10', new DateTimeZone('UTC'));
+    self::mockTime($today);
     insertTransaction($this->db, $this->jane, 'deposit', '1.00', 'DE', $today->modify('-7 days')->format('Y-m-d 12:00:00'));
     insertTransaction($this->db, $this->jane, 'deposit', '2.00', 'DE', $today->modify('-6 days')->format('Y-m-d 00:00:00'));
     insertTransaction($this->db, $this->jane, 'deposit', '3.00', 'DE', $today->format('Y-m-d 12:00:00'));
@@ -119,12 +123,22 @@ it('defaults the start to 6 days before a given end', function () {
 });
 
 it('defaults the end to today when only the start is given', function () {
-    $today = new DateTimeImmutable('today', new DateTimeZone('UTC'));
+    $today = new DateTimeImmutable('2015-05-10', new DateTimeZone('UTC'));
+    self::mockTime($today);
     $from = $today->modify('-10 days')->format('Y-m-d');
 
     $body = getReport($this->client, ['from' => $from]);
 
     expect($body)->toMatchArray(['from' => $from, 'to' => $today->format('Y-m-d')]);
+});
+
+it('takes today in UTC, not in the server timezone', function () {
+    // 00:30 in Rome on the 10th is still the 9th in UTC
+    self::mockTime(new DateTimeImmutable('2015-05-10 00:30:00', new DateTimeZone('Europe/Rome')));
+
+    $body = getReport($this->client);
+
+    expect($body['to'])->toBe('2015-05-09');
 });
 
 it('accepts a range of up to 3 months', function (string $from, string $to) {

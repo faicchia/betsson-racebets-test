@@ -22,6 +22,16 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
+    # every "now" in the app comes from this clock, always in UTC whatever the server or php.ini says.
+    # It wraps the global clock, so tests can freeze time with ClockSensitiveTrait::mockTime().
+    clock:
+        class: Symfony\Component\Clock\Clock
+        autowire: false # it would inject itself as the inner clock
+        arguments:
+            $timezone: !service
+                class: DateTimeZone
+                arguments: ['UTC']
+
 when@test:
     services:
         # Symfony's default logger writes to stderr, which would clutter the test output.

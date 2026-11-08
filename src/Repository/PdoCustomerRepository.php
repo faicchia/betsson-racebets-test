@@ -12,6 +12,7 @@ use App\ValueObject\Money;
 use DateTimeImmutable;
 use DateTimeZone;
 use PDOException;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class PdoCustomerRepository implements CustomerRepository
@@ -32,6 +33,7 @@ final readonly class PdoCustomerRepository implements CustomerRepository
 
     public function __construct(
         private Connection $connection,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -79,7 +81,7 @@ final readonly class PdoCustomerRepository implements CustomerRepository
             // updated_at always changes, so an existing row is always counted as affected
             return 1 === $this->connection->execute(
                 sprintf('UPDATE customers SET %s, updated_at = ? WHERE id = ?', implode(', ', $assignments)),
-                [...$parameters, (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(self::DATETIME_FORMAT), $id->toBinary()],
+                [...$parameters, $this->clock->now()->format(self::DATETIME_FORMAT), $id->toBinary()],
             );
         } catch (PDOException $e) {
             if (isset($fields['email']) && self::isDuplicateKey($e, 'uq_customers_email')) {
@@ -97,7 +99,7 @@ final readonly class PdoCustomerRepository implements CustomerRepository
             [
                 $fields['realBalance']->toString(),
                 $fields['bonusBalance']->toString(),
-                (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(self::DATETIME_FORMAT),
+                $this->clock->now()->format(self::DATETIME_FORMAT),
                 $id->toBinary(),
             ],
         );
