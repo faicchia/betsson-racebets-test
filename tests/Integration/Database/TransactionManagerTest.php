@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 use App\Database\Connection;
 use App\Database\TransactionManager;
+use Symfony\Component\Clock\Test\ClockSensitiveTrait;
+
+uses(ClockSensitiveTrait::class);
 
 beforeEach(function () {
     $this->db = self::getContainer()->get(Connection::class);
     $this->transactions = self::getContainer()->get(TransactionManager::class);
     resetDatabase($this->db);
+    // the backoff sleeps on the mock clock, which only moves its time forward
+    $this->start = new DateTimeImmutable('2015-05-10 12:00:00', new DateTimeZone('UTC'));
+    $this->clock = self::mockTime($this->start);
 });
 
 function insertCustomerRow(Connection $db, string $email): void
@@ -76,6 +82,21 @@ it('retries the whole callback after a deadlock or a lock wait timeout', functio
     'deadlock' => [1213],
     'lock wait timeout' => [1205],
 ]);
+
+it('backs off exponentially, with jitter, between attempts', function () {
+    $attempts = 0;
+
+    $this->transactions->transactional(function () use (&$attempts) {
+        if (++$attempts < 3) {
+            throw mysqlError(1213);
+        }
+    });
+
+    // 50ms then 100ms, each plus up to 10ms of jitter
+    expect($this->clock->now())
+        ->toBeGreaterThanOrEqual($this->start->modify('+150 milliseconds'))
+        ->toBeLessThanOrEqual($this->start->modify('+170 milliseconds'));
+});
 
 it('gives up after the last attempt', function () {
     $attempts = 0;

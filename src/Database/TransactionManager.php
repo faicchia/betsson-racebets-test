@@ -6,6 +6,8 @@ namespace App\Database;
 
 use LogicException;
 use PDOException;
+use Random\Randomizer;
+use Symfony\Component\Clock\ClockInterface;
 use Throwable;
 
 /**
@@ -16,10 +18,12 @@ final readonly class TransactionManager
     private const int MAX_ATTEMPTS = 3;
     private const int MYSQL_DEADLOCK = 1213;
     private const int MYSQL_LOCK_WAIT_TIMEOUT = 1205;
-    private const int BASE_BACKOFF_MICROSECONDS = 50_000; // 50ms base
+    private const float BASE_BACKOFF_SECONDS = 0.05;
+    private const float MAX_JITTER_SECONDS = 0.01;
 
     public function __construct(
         private Connection $connection,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -54,10 +58,10 @@ final readonly class TransactionManager
                 }
 
                 // Exponential backoff with random jitter to prevent thundering herd conflicts
-                $backoff = self::BASE_BACKOFF_MICROSECONDS * (2 ** ($attempt - 1));
-                $jitter = random_int(0, 10_000); // Add up to 10ms of random jitter
+                $backoff = self::BASE_BACKOFF_SECONDS * (2 ** ($attempt - 1));
+                $jitter = new Randomizer()->getFloat(0, self::MAX_JITTER_SECONDS);
 
-                usleep($backoff + $jitter);
+                $this->clock->sleep($backoff + $jitter);
             }
         }
 
