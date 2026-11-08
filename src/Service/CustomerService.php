@@ -15,6 +15,7 @@ use App\Request\UpdateCustomerRequest;
 use App\ValueObject\Gender;
 use App\ValueObject\Money;
 use Psr\Clock\ClockInterface;
+use Random\Randomizer;
 use Symfony\Component\Uid\Uuid;
 
 final readonly class CustomerService
@@ -26,6 +27,7 @@ final readonly class CustomerService
         private CustomerRepository $customers,
         private TransactionManager $transactions,
         private ClockInterface $clock,
+        private Randomizer $randomizer,
     ) {
     }
 
@@ -43,7 +45,7 @@ final readonly class CustomerService
             lastName: $request->lastName,
             gender: Gender::from($request->gender),
             country: $request->country,
-            bonusPercent: random_int(self::MIN_BONUS_PERCENT, self::MAX_BONUS_PERCENT),
+            bonusPercent: $this->randomizer->getInt(self::MIN_BONUS_PERCENT, self::MAX_BONUS_PERCENT),
             realBalance: Money::zero(),
             bonusBalance: Money::zero(),
             createdAt: $now,

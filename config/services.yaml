@@ -32,6 +32,9 @@ services:
                 class: DateTimeZone
                 arguments: ['UTC']
 
+    # randomness for business rules (e.g. the bonus percent); the default engine is the secure one
+    Random\Randomizer: ~
+
 when@test:
     services:
         # Symfony's default logger writes to stderr, which would clutter the test output.
